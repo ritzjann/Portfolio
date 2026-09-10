@@ -846,3 +846,111 @@ body.horizontal-scroll-active .horizontal-scroll-track::before {
     transform: none !important;
   }
 }
+
+/* =====================================================================
+   ANCIENT MANUSCRIPT TEXT STYLING
+   ===================================================================== */
+
+/* --- Body-wide serif for that "old tome" feel --- */
+body {
+  font-family: 'EB Garamond', 'Georgia', 'Times New Roman', serif;
+  font-feature-settings:
+    "liga" 1,
+    "dlig" 1,
+    "calt" 1,
+    "onum" 1,   /* old-style numerals (some fall back gracefully) */
+    "kern" 1;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  letter-spacing: 0.005em;
+}
+
+/* Slightly larger body text to compensate for Garamond's small x-height */
+body,
+p, li, span, a, button, input, textarea, select {
+  font-size: 1.02em;
+  line-height: 1.7;
+}
+
+/* --- Ink-bleed shadow on primary readable text --- */
+p, li, .font-body {
+  color: #d8d4cc;
+  text-shadow:
+    0.3px 0.4px 0 rgba(0, 0, 0, 0.4),
+    0 0 8px rgba(237, 192, 105, 0.03);
+}
+
+/* Headings stay grand and slightly distressed */
+h1, h2, h3 {
+  text-shadow:
+    0.5px 0.5px 0 rgba(0, 0, 0, 0.5),
+    0 0 18px rgba(237, 192, 105, 0.08);
+  letter-spacing: -0.005em;
+}
+
+/* --- Keep the mono font for runes, badges, code, kbd --- */
+.font-mono,
+.kbd,
+.material-symbols-outlined,
+.rune-trail,
+.scroll-indicator,
+.shortcuts-trigger,
+.copy-toast,
+.witcher-rune-particle {
+  font-family: 'JetBrains Mono', monospace !important;
+}
+
+/* --- Headline font stays EB Garamond --- */
+h1, h2, h3, .font-headline, .shortcuts-title {
+  font-family: 'EB Garamond', serif;
+  font-weight: 600;
+}
+
+/* --- Make parchment cards feel like actual paper --- */
+.parchment p,
+.parchment li,
+.parchment a,
+.parchment span:not(.material-symbols-outlined) {
+  text-shadow:
+    0.4px 0.5px 0 rgba(0, 0, 0, 0.45),
+    0 0 6px rgba(237, 192, 105, 0.04);
+}
+
+/* --- Subtle color: dark ink on light, warm ivory on dark --- */
+.text-outline,
+.text-outline-variant {
+  text-shadow: 0 0 6px rgba(237, 192, 105, 0.05);
+}
+
+/* --- Nav links become "title entries in a ledger" --- */
+.nav-item {
+  letter-spacing: 0.08em;
+  text-shadow:
+    0.3px 0.3px 0 rgba(0, 0, 0, 0.4);
+}
+
+/* --- Form inputs get a quill-written feel --- */
+input, textarea, select {
+  font-family: 'EB Garamond', serif;
+  font-size: 1.05em;
+  letter-spacing: 0.01em;
+}
+
+/* --- On small screens, revert body serif slightly for legibility --- */
+@media (max-width: 640px) {
+  body {
+    font-size: 0.98em;
+    line-height: 1.65;
+  }
+  p, li, span, a, button {
+    font-size: 1em;
+  }
+}
+
+/* --- Respect user's reduced-motion and contrast preferences --- */
+@media (prefers-contrast: more) {
+  p, li, .font-body {
+    color: #f0ece4;
+  }
+}

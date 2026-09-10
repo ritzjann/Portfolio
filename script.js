@@ -821,7 +821,7 @@ function handleSummonSubmit(event) {
 })();
 
 
-/* ===================== 11) COPY-TO-CLIPBOARD EMAIL ===================== */
+/* ===================== 11) COPY-TO-CLIPBOARD EMAIL (with mailto fallback) ===================== */
 (function initCopyEmail() {
   const toast = document.createElement('div');
   toast.className = 'copy-toast';
@@ -839,21 +839,27 @@ function handleSummonSubmit(event) {
     link.classList.add('copyable-email');
 
     link.addEventListener('click', (e) => {
-      e.preventDefault();
+      // DON'T preventDefault — let the mailto: open the mail client
       const email = link.getAttribute('href').replace('mailto:', '');
+
+      // Also copy to clipboard in the background
       navigator.clipboard.writeText(email)
         .then(() => showToast())
         .catch(() => {
+          // Fallback copy for older browsers
           const ta = document.createElement('textarea');
           ta.value = email;
           ta.style.position = 'fixed';
           ta.style.opacity = '0';
           document.body.appendChild(ta);
           ta.select();
-          document.execCommand('copy');
+          try { document.execCommand('copy'); } catch (_) {}
           ta.remove();
           showToast();
         });
+
+      // Note: We do NOT call e.preventDefault(), so the mailto link
+      // still triggers the user's default mail client.
     });
   });
 })();

@@ -338,3 +338,50 @@ body.horizontal-scroll-active footer {
     width: 100%;
   }
 }
+
+/* =====================================================================
+   GLOBAL BACKGROUND — one continuous image behind every panel
+   ===================================================================== */
+
+/* The track itself gets the background.
+   Because the track is as wide as all sections combined,
+   the image stretches across the whole horizontal journey. */
+body.horizontal-scroll-active .horizontal-scroll-track {
+  background-image: url('witcher-bg.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: scroll;
+}
+
+/* A dark overlay on top of the background so text stays readable.
+   This layer sits behind all the sections but above the image. */
+body.horizontal-scroll-active .horizontal-scroll-track::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(13, 14, 15, 0.85) 0%,
+    rgba(13, 14, 15, 0.75) 50%,
+    rgba(13, 14, 15, 0.9) 100%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Each section becomes transparent so the track background shows through.
+   Remove the solid `bg-surface` / `bg-surface-container-lowest` utilities
+   from your section classes OR override them here. */
+body.horizontal-scroll-active .horizontal-scroll-track > section {
+  background: transparent !important;
+  position: relative;
+  z-index: 1;
+}
+
+/* The footer too */
+body.horizontal-scroll-active footer {
+  background: transparent !important;
+  position: relative;
+  z-index: 1;
+}

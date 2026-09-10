@@ -230,24 +230,20 @@ a:active::after, button:active::after {
 /* =====================================================================
    HORIZONTAL SCROLL MODE
    ===================================================================== */
-
-/* The body height is set dynamically by JS to match the horizontal track width.
-   Do NOT set height: 100vh here — it fights with the JS and causes scroll jumps. */
 body.horizontal-scroll-active {
   overflow-x: hidden;
-  overflow-y: auto;
+  overflow-y: hidden;
+  height: 100vh;
 }
 
-/* The track holds all sections side-by-side.
-   No CSS transition — we want 1:1 scroll mapping for a direct feel. */
 .horizontal-scroll-track {
   display: flex;
   flex-direction: row;
   flex-wrap: nowrap;
   will-change: transform;
+  height: 100vh;
 }
 
-/* Each section is exactly one viewport wide and cannot shrink. */
 .horizontal-scroll-track > section {
   min-width: 100vw;
   width: 100vw;
@@ -256,21 +252,19 @@ body.horizontal-scroll-active {
   height: 100vh;
   overflow-y: auto;
   overflow-x: hidden;
+  scroll-behavior: smooth;
 }
 
-/* Hero keeps its tall feel */
 .horizontal-scroll-track > section#hero {
   height: 100vh;
   min-height: 100vh;
   overflow-y: auto;
 }
 
-/* The fixed header stays put while the track slides underneath it */
 body.horizontal-scroll-active header {
   position: fixed;
 }
 
-/* Footer remains visible on the very last panel */
 body.horizontal-scroll-active footer {
   display: block;
   width: 100vw;
@@ -279,11 +273,60 @@ body.horizontal-scroll-active footer {
 
 
 /* =====================================================================
+   SCROLL INDICATOR
+   ===================================================================== */
+.scroll-indicator {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(13, 14, 15, 0.7);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(237, 192, 105, 0.25);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: #edc069;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.scroll-indicator.visible {
+  opacity: 1;
+}
+
+.scroll-indicator .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #edc069;
+  box-shadow: 0 0 8px rgba(237, 192, 105, 0.8);
+}
+
+.scroll-indicator .hint {
+  color: rgba(232, 230, 227, 0.5);
+  margin-left: 4px;
+}
+
+
+/* =====================================================================
    RESPONSIVE — disable horizontal mode on small screens
    ===================================================================== */
 @media (max-width: 1023px) {
+  body.horizontal-scroll-active {
+    overflow-y: auto;
+    height: auto;
+  }
   .horizontal-scroll-track {
     display: block;
+    height: auto;
   }
   .horizontal-scroll-track > section {
     min-width: 100%;

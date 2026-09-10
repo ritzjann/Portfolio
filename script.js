@@ -73,7 +73,6 @@
   initEmbers();
   animate();
 
-  // Re-seed embers when canvas is resized
   window.addEventListener('resize', initEmbers);
 })();
 
@@ -95,36 +94,113 @@ function handleSummonSubmit(event) {
 }
 
 
-/* ===================== SCROLL SPY ===================== */
+/* ===================== TYPING EFFECT ===================== */
+(function initTypingEffect() {
+  const lineEl = document.getElementById('typed-line');
+  const cursorEl = document.getElementById('typed-cursor');
+  if (!lineEl || !cursorEl) return;
+
+  const phrases = [
+    { prefix: "I want to make things ",    highlight: "that make a difference." },
+    { prefix: "I want to build things ",   highlight: "that make an impact." },
+    { prefix: "I want to create things ",  highlight: "that tell a story." },
+    { prefix: "I want to write code ",     highlight: "that feels like magic." },
+    { prefix: "I want to solve problems ", highlight: "through curiosity and craft." }
+  ];
+
+  const TYPE_SPEED   = 55;
+  const DELETE_SPEED = 30;
+  const PAUSE_FULL   = 2200;
+  const PAUSE_EMPTY  = 500;
+
+  let phraseIndex = 0;
+  let charIndex = 0;
+  let isDeleting = false;
+
+  function renderPhrase(phrase, visibleCount) {
+    const fullPlain = phrase.prefix + phrase.highlight;
+    const plainVisible = Math.min(visibleCount, phrase.prefix.length);
+    const highlightVisible = Math.max(0, visibleCount - phrase.prefix.length);
+
+    const plainText = fullPlain.slice(0, plainVisible);
+    const highlightText = phrase.highlight.slice(0, highlightVisible);
+
+    let html = plainText;
+    if (highlightText) {
+      html += `<span class="text-primary italic drop-shadow-[0_2px_10px_rgba(237,192,105,0.4)]">${highlightText}</span>`;
+    }
+    return html;
+  }
+
+  function tick() {
+    const current = phrases[phraseIndex];
+    const fullText = current.prefix + current.highlight;
+
+    if (!isDeleting) {
+      charIndex++;
+      lineEl.innerHTML = renderPhrase(current, charIndex);
+
+      if (charIndex >= fullText.length) {
+        cursorEl.classList.add('paused');
+        isDeleting = true;
+        setTimeout(tick, PAUSE_FULL);
+        return;
+      }
+      setTimeout(tick, TYPE_SPEED);
+    } else {
+      charIndex--;
+      lineEl.innerHTML = renderPhrase(current, charIndex);
+
+      if (charIndex <= 0) {
+        charIndex = 0;
+        isDeleting = false;
+        phraseIndex = (phraseIndex + 1) % phrases.length;
+        cursorEl.classList.remove('paused');
+        setTimeout(tick, PAUSE_EMPTY);
+        return;
+      }
+      setTimeout(tick, DELETE_SPEED);
+    }
+  }
+
+  setTimeout(() => {
+    cursorEl.classList.remove('paused');
+    tick();
+  }, 600);
+})();
+
+
+/* ===================== SCROLL SPY (horizontal-aware) ===================== */
 (function initScrollSpy() {
   const sections = document.querySelectorAll('section[id]');
   const navLinks = document.querySelectorAll('#nav-links .nav-item');
+  if (sections.length === 0) return;
 
-  window.addEventListener('scroll', () => {
-    let current = "";
-    sections.forEach(section => {
-      const sectionTop = section.offsetTop - 120;
-      const sectionHeight = section.offsetHeight;
-      if (window.scrollY >= sectionTop && window.scrollY < sectionTop + sectionHeight) {
-        current = section.getAttribute('id');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.getAttribute('id');
+        navLinks.forEach(link => {
+          link.classList.remove('bg-primary-container', 'text-on-primary-container', 'font-semibold');
+          link.classList.add('text-on-surface-variant');
+          if (link.getAttribute('href') === `#${id}`) {
+            link.classList.add('bg-primary-container', 'text-on-primary-container', 'font-semibold');
+            link.classList.remove('text-on-surface-variant');
+          }
+        });
       }
     });
-
-    navLinks.forEach(link => {
-      link.classList.remove('bg-primary-container', 'text-on-primary-container', 'font-semibold');
-      link.classList.add('text-on-surface-variant');
-      if (link.getAttribute('href') === `#${current}`) {
-        link.classList.add('bg-primary-container', 'text-on-primary-container', 'font-semibold');
-        link.classList.remove('text-on-surface-variant');
-      }
-    });
+  }, {
+    root: null,
+    threshold: 0.4
   });
+
+  sections.forEach(sec => observer.observe(sec));
 })();
 
 
 /* ===================== WITCHER TRANSITION ===================== */
 (function initWitcherTransition() {
-
   const RUNES = ['ᚱ', 'ᛉ', 'ᚦ', 'ᛟ', 'ᚨ', 'ᛖ', 'ᛗ', 'ᛞ'];
 
   const overlay = document.createElement('div');
@@ -143,7 +219,6 @@ function handleSummonSubmit(event) {
     overlay.classList.add('active');
     setTimeout(() => overlay.classList.remove('active'), 180);
 
-    // Expanding golden ring
     const ring = document.createElement('div');
     ring.className = 'witcher-transition-ring';
     ring.style.left = `${x}px`;
@@ -152,7 +227,6 @@ function handleSummonSubmit(event) {
 
     requestAnimationFrame(() => ring.classList.add('expand'));
 
-    // Rune particles
     const particleCount = 6;
     for (let i = 0; i < particleCount; i++) {
       const particle = document.createElement('div');
@@ -196,7 +270,6 @@ function handleSummonSubmit(event) {
       requestAnimationFrame(animateParticle);
     }
 
-    // Screen shake
     document.body.classList.add('witcher-screen-shake');
     setTimeout(() => document.body.classList.remove('witcher-screen-shake'), 320);
 
@@ -205,161 +278,7 @@ function handleSummonSubmit(event) {
       isTransitioning = false;
     }, 800);
   }
-/* ===================== TYPING EFFECT ===================== */
-(function initTypingEffect() {
-  const lineEl = document.getElementById('typed-line');
-  const cursorEl = document.getElementById('typed-cursor');
-  if (!lineEl || !cursorEl) return;
 
-  // Phrases to cycle through.
-  // Each phrase can mix plain text and a highlighted tail segment.
-  // `prefix` = normal white text | `highlight` = gold italic text
-  const phrases = [
-    { prefix: "I want to make things ",        highlight: "that make a difference." },
-    { prefix: "I want to build things ",       highlight: "that make an impact." },
-    { prefix: "I want to create things ",      highlight: "that tell a story." },
-    { prefix: "I want to write code ",         highlight: "that feels like magic." },
-    { prefix: "I want to solve problems ",     highlight: "through curiosity and craft." }
-  ];
-
-  // Timing (ms)
-  const TYPE_SPEED   = 55;   // per character
-  const DELETE_SPEED = 30;   // per character
-  const PAUSE_FULL   = 2200; // pause at full phrase
-  const PAUSE_EMPTY  = 500;  // pause when phrase is empty
-
-  let phraseIndex = 0;
-  let charIndex = 0;
-  let isDeleting = false;
-
-  /**
-   * Builds the HTML for the currently-visible characters.
-   * Keeps the highlighted tail in gold once we pass the split point.
-   */
-  function renderPhrase(phrase, visibleCount) {
-    const fullPlain = phrase.prefix + phrase.highlight;
-
-    // How many chars of the plain prefix are visible?
-    const plainVisible = Math.min(visibleCount, phrase.prefix.length);
-
-    // How many chars of the highlighted tail are visible?
-    const highlightVisible = Math.max(0, visibleCount - phrase.prefix.length);
-
-    const plainText = fullPlain.slice(0, plainVisible);
-    const highlightText = phrase.highlight.slice(0, highlightVisible);
-
-    let html = plainText;
-    if (highlightText) {
-      html += `<span class="text-primary italic drop-shadow-[0_2px_10px_rgba(237,192,105,0.4)]">${highlightText}</span>`;
-    }
-    return html;
-  }
-/* ===================== HORIZONTAL SCROLL ===================== */
-(function initHorizontalScroll() {
-  // Only enable on desktop — mobile touch is awkward for this pattern
-  const isDesktop = window.matchMedia('(min-width: 1024px)').matches;
-  if (!isDesktop) return;
-
-  const main = document.querySelector('main');
-  const sections = Array.from(main.querySelectorAll('section'));
-  if (!main || sections.length === 0) return;
-
-  // Enable the mode
-  document.body.classList.add('horizontal-scroll-active');
-
-  // Wrap all sections in a horizontal track
-  const track = document.createElement('div');
-  track.className = 'horizontal-scroll-track';
-  sections.forEach(sec => track.appendChild(sec));
-  main.appendChild(track);
-
-  // Total horizontal distance we can scroll
-  let maxScrollX = 0;
-  let currentX = 0;
-
-  function measure() {
-    // Track width minus the viewport width = how far we can translate
-    maxScrollX = track.scrollWidth - window.innerWidth;
-  }
-
-  function updateScrollBounds() {
-    // The body height must equal the horizontal distance so that
-    // scrolling vertically maps 1:1 to horizontal movement
-    document.body.style.height = `${window.innerHeight + maxScrollX}px`;
-  }
-
-  function onScroll() {
-    // Map vertical scroll position to horizontal translation
-    const y = window.scrollY;
-    currentX = Math.min(y, maxScrollX);
-    track.style.transform = `translate3d(${-currentX}px, 0, 0)`;
-  }
-
-  // Re-measure on load + resize
-  function refresh() {
-    // Temporarily reset transform to measure accurately
-    track.style.transform = 'translate3d(0,0,0)';
-    measure();
-    updateScrollBounds();
-    onScroll();
-  }
-
-  window.addEventListener('resize', refresh);
-  window.addEventListener('scroll', onScroll, { passive: true });
-
-  // Wait a frame so images/fonts settle before measuring
-  requestAnimationFrame(() => {
-    setTimeout(refresh, 100);
-  });
-
-  // Re-measure again after all resources load (fonts, images)
-  window.addEventListener('load', refresh);
-
-  // Also expose so other code can refresh if needed
-  window.refreshHorizontalScroll = refresh;
-})();
-
-  function tick() {
-    const current = phrases[phraseIndex];
-    const fullText = current.prefix + current.highlight;
-
-    if (!isDeleting) {
-      // ---- TYPING FORWARD ----
-      charIndex++;
-      lineEl.innerHTML = renderPhrase(current, charIndex);
-
-      if (charIndex >= fullText.length) {
-        // Finished typing the full phrase — pause, then start deleting
-        cursorEl.classList.add('paused');
-        isDeleting = true;
-        setTimeout(tick, PAUSE_FULL);
-        return;
-      }
-      setTimeout(tick, TYPE_SPEED);
-    } else {
-      // ---- DELETING ----
-      charIndex--;
-      lineEl.innerHTML = renderPhrase(current, charIndex);
-
-      if (charIndex <= 0) {
-        // Finished deleting — move to next phrase
-        charIndex = 0;
-        isDeleting = false;
-        phraseIndex = (phraseIndex + 1) % phrases.length;
-        cursorEl.classList.remove('paused');
-        setTimeout(tick, PAUSE_EMPTY);
-        return;
-      }
-      setTimeout(tick, DELETE_SPEED);
-    }
-  }
-
-  // Kick off after a short delay so the page can settle
-  setTimeout(() => {
-    cursorEl.classList.remove('paused');
-    tick();
-  }, 600);
-})();
   function attachTransitionHandlers() {
     const clickables = document.querySelectorAll('a, button');
     clickables.forEach(el => {
@@ -393,4 +312,162 @@ function handleSummonSubmit(event) {
 
   window.playWitcherTransition = playWitcherTransition;
   window.attachTransitionHandlers = attachTransitionHandlers;
+})();
+
+
+/* ===================== HORIZONTAL SCROLL (snap-based) ===================== */
+(function initHorizontalScroll() {
+  const isDesktop = window.matchMedia('(min-width: 1024px)').matches;
+  if (!isDesktop) return;
+
+  const main = document.querySelector('main');
+  const footer = document.querySelector('footer');
+  if (!main) return;
+
+  const sections = Array.from(main.querySelectorAll('section'));
+  const panels = footer ? [...sections, footer] : sections;
+  if (panels.length === 0) return;
+
+  document.body.classList.add('horizontal-scroll-active');
+
+  // Build the horizontal track
+  const track = document.createElement('div');
+  track.className = 'horizontal-scroll-track';
+  panels.forEach(p => track.appendChild(p));
+  main.appendChild(track);
+
+  let currentPanel = 0;
+  let currentTranslateX = 0;
+  let isAnimating = false;
+  let isCooldown = false;
+
+  // --- Indicator ---
+  const indicator = document.createElement('div');
+  indicator.className = 'scroll-indicator';
+  indicator.innerHTML =
+    '<span class="dot"></span>' +
+    '<span class="current">01</span>' +
+    '<span class="hint">/</span>' +
+    '<span class="total">' + String(panels.length).padStart(2, '0') + '</span>' +
+    '<span class="hint">→</span>';
+  document.body.appendChild(indicator);
+  setTimeout(() => indicator.classList.add('visible'), 800);
+
+  function updateIndicator() {
+    indicator.querySelector('.current').textContent =
+      String(currentPanel + 1).padStart(2, '0');
+  }
+
+  // --- Animated translate ---
+  function animateTranslate(targetX, duration, onDone) {
+    const startX = currentTranslateX;
+    const deltaX = targetX - startX;
+    const startTime = performance.now();
+
+    function step(now) {
+      const elapsed = now - startTime;
+      const t = Math.min(elapsed / duration, 1);
+      const eased = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+      currentTranslateX = startX + deltaX * eased;
+      track.style.transform = `translate3d(${currentTranslateX}px, 0, 0)`;
+
+      if (t < 1) {
+        requestAnimationFrame(step);
+      } else {
+        currentTranslateX = targetX;
+        track.style.transform = `translate3d(${targetX}px, 0, 0)`;
+        if (onDone) onDone();
+      }
+    }
+    requestAnimationFrame(step);
+  }
+
+  function goToPanel(index) {
+    index = Math.max(0, Math.min(panels.length - 1, index));
+    if (index === currentPanel) return;
+
+    isAnimating = true;
+    currentPanel = index;
+    updateIndicator();
+
+    animateTranslate(-currentPanel * window.innerWidth, 700, () => {
+      isAnimating = false;
+    });
+  }
+
+  function triggerCooldown() {
+    isCooldown = true;
+    setTimeout(() => { isCooldown = false; }, 900);
+  }
+
+  // --- Wheel handling ---
+  function onWheel(e) {
+    if (isAnimating || isCooldown) {
+      e.preventDefault();
+      return;
+    }
+
+    const activePanel = panels[currentPanel];
+    const atTop = activePanel.scrollTop <= 0;
+    const atBottom = activePanel.scrollTop + activePanel.clientHeight >= activePanel.scrollHeight - 2;
+
+    const goingDown = e.deltaY > 0;
+    const goingUp = e.deltaY < 0;
+
+    if (goingDown && !atBottom) return;
+    if (goingUp && !atTop) return;
+
+    e.preventDefault();
+
+    if (goingDown && currentPanel < panels.length - 1) {
+      goToPanel(currentPanel + 1);
+      triggerCooldown();
+    } else if (goingUp && currentPanel > 0) {
+      goToPanel(currentPanel - 1);
+      triggerCooldown();
+    }
+  }
+
+  // --- Keyboard ---
+  function onKey(e) {
+    if (isAnimating || isCooldown) return;
+    if (e.key === 'ArrowRight' || e.key === 'PageDown') {
+      if (currentPanel < panels.length - 1) {
+        goToPanel(currentPanel + 1);
+        triggerCooldown();
+      }
+    } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+      if (currentPanel > 0) {
+        goToPanel(currentPanel - 1);
+        triggerCooldown();
+      }
+    }
+  }
+
+  // --- Resize ---
+  function onResize() {
+    currentTranslateX = -currentPanel * window.innerWidth;
+    track.style.transform = `translate3d(${currentTranslateX}px, 0, 0)`;
+  }
+
+  window.addEventListener('wheel', onWheel, { passive: false });
+  window.addEventListener('keydown', onKey);
+  window.addEventListener('resize', onResize);
+
+  // Hook nav anchors so clicking them advances the panel horizontally
+  document.querySelectorAll('a[href^="#"]').forEach(link => {
+    link.addEventListener('click', (e) => {
+      const id = link.getAttribute('href').slice(1);
+      const targetIndex = panels.findIndex(p => p.id === id);
+      if (targetIndex !== -1) {
+        e.preventDefault();
+        goToPanel(targetIndex);
+        triggerCooldown();
+      }
+    });
+  });
+
+  track.style.transform = 'translate3d(0,0,0)';
+  updateIndicator();
 })();

@@ -1,3 +1,21 @@
+/* ===================== PARCHMENT BURN FILTER ===================== */
+(function injectParchmentFilter() {
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(svgNS, 'svg');
+  svg.setAttribute('class', 'parchment-burn-svg');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.innerHTML = `
+    <defs>
+      <filter id="parchment-burn" x="-5%" y="-5%" width="110%" height="110%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="3" seed="7" result="noise"/>
+        <feDisplacementMap in="SourceGraphic" in2="noise" scale="4" xChannelSelector="R" yChannelSelector="G"/>
+      </filter>
+    </defs>
+  `;
+  document.body.appendChild(svg);
+})();
+
+
 /* ===================== EMBER CANVAS ===================== */
 (function initEmbers() {
   const canvas = document.getElementById('ember-canvas');
@@ -183,9 +201,18 @@ function handleSummonSubmit(event) {
 })();
 
 
-/* ===================== WITCHER TRANSITION ===================== */
+/* ===================== WITCHER TRANSITION (SIGN-CASTING) ===================== */
 (function initWitcherTransition() {
   const RUNES = ['ᚱ', 'ᛉ', 'ᚦ', 'ᛟ', 'ᚨ', 'ᛖ', 'ᛗ', 'ᛞ'];
+
+  function pickSign(el) {
+    if (el.type === 'submit' || el.id === 'submit-btn') return 'quen';
+    if (el.classList.contains('bg-primary')) return 'igni';
+    if (el.classList.contains('nav-item')) return 'aard';
+    if (el.closest('footer')) return 'yrden';
+    if (el.href && el.target === '_blank') return 'aard';
+    return 'igni';
+  }
 
   const overlay = document.createElement('div');
   overlay.className = 'witcher-transition-overlay';
@@ -193,23 +220,21 @@ function handleSummonSubmit(event) {
 
   let isTransitioning = false;
 
-  function playWitcherTransition(x, y) {
+  function playWitcherTransition(x, y, signType = 'igni') {
     if (isTransitioning) return;
     isTransitioning = true;
 
     overlay.style.setProperty('--click-x', `${x}px`);
     overlay.style.setProperty('--click-y', `${y}px`);
-
     overlay.classList.add('active');
     setTimeout(() => overlay.classList.remove('active'), 180);
 
-    const ring = document.createElement('div');
-    ring.className = 'witcher-transition-ring';
-    ring.style.left = `${x}px`;
-    ring.style.top = `${y}px`;
-    document.body.appendChild(ring);
-
-    requestAnimationFrame(() => ring.classList.add('expand'));
+    const sign = document.createElement('div');
+    sign.className = `witcher-sign ${signType}`;
+    sign.style.left = `${x}px`;
+    sign.style.top = `${y}px`;
+    document.body.appendChild(sign);
+    setTimeout(() => sign.remove(), 800);
 
     const particleCount = 6;
     for (let i = 0; i < particleCount; i++) {
@@ -235,7 +260,6 @@ function handleSummonSubmit(event) {
         const elapsed = now - startTime;
         const t = Math.min(elapsed / duration, 1);
         const easeOut = 1 - Math.pow(1 - t, 3);
-
         const currentX = x + (px - x) * easeOut;
         const currentY = y + (py - y) * easeOut;
         const scale = 1 + easeOut * 0.3;
@@ -254,11 +278,12 @@ function handleSummonSubmit(event) {
       requestAnimationFrame(animateParticle);
     }
 
-    document.body.classList.add('witcher-screen-shake');
-    setTimeout(() => document.body.classList.remove('witcher-screen-shake'), 320);
+    if (signType === 'igni') {
+      document.body.classList.add('witcher-screen-shake');
+      setTimeout(() => document.body.classList.remove('witcher-screen-shake'), 320);
+    }
 
     setTimeout(() => {
-      ring.remove();
       isTransitioning = false;
     }, 800);
   }
@@ -276,13 +301,13 @@ function handleSummonSubmit(event) {
           x = rect.left + rect.width / 2;
           y = rect.top + rect.height / 2;
         }
-        playWitcherTransition(x, y);
+        playWitcherTransition(x, y, pickSign(el));
       });
 
       el.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           const rect = el.getBoundingClientRect();
-          playWitcherTransition(rect.left + rect.width / 2, rect.top + rect.height / 2);
+          playWitcherTransition(rect.left + rect.width / 2, rect.top + rect.height / 2, pickSign(el));
         }
       });
     });
@@ -319,7 +344,6 @@ function handleSummonSubmit(event) {
   panels.forEach(p => track.appendChild(p));
   main.appendChild(track);
 
-  // Mark initial panel active for 3D
   panels[0].classList.add('is-active');
 
   let currentPanel = 0;
@@ -327,7 +351,6 @@ function handleSummonSubmit(event) {
   let isAnimating = false;
   let isCooldown = false;
 
-  // --- Indicator ---
   const indicator = document.createElement('div');
   indicator.className = 'scroll-indicator';
   indicator.innerHTML =
@@ -344,7 +367,6 @@ function handleSummonSubmit(event) {
       String(currentPanel + 1).padStart(2, '0');
   }
 
-  // --- 3D panel state management ---
   function apply3DStates(fromIndex, toIndex) {
     const goingForward = toIndex > fromIndex;
     const leavingClass  = goingForward ? 'is-leaving-forward'  : 'is-leaving-back';
@@ -353,12 +375,10 @@ function handleSummonSubmit(event) {
     const prev = panels[fromIndex];
     const next = panels[toIndex];
 
-    // Previous panel leaves
     prev.classList.remove('is-active');
     prev.classList.add(leavingClass);
     setTimeout(() => prev.classList.remove(leavingClass), 800);
 
-    // Next panel enters (starts rotated) then snaps to active
     next.classList.add(enteringClass);
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
@@ -368,7 +388,6 @@ function handleSummonSubmit(event) {
     });
   }
 
-  // --- Animated translate ---
   function animateTranslate(targetX, duration, onDone) {
     const startX = currentTranslateX;
     const deltaX = targetX - startX;
@@ -486,7 +505,6 @@ function handleSummonSubmit(event) {
   if (!isDesktop) return;
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-  // --- Parchment card tilt ---
   function attachParchmentTilt() {
     document.querySelectorAll('.parchment').forEach(card => {
       card.addEventListener('mousemove', (e) => {
@@ -511,7 +529,6 @@ function handleSummonSubmit(event) {
     });
   }
 
-  // --- Hero medallion tilt ---
   function attachMedallionTilt() {
     const medallion = document.querySelector('.hero-medallion');
     const hero = document.getElementById('hero');
@@ -553,6 +570,7 @@ function handleSummonSubmit(event) {
   window.addEventListener('load', attachParchmentTilt);
 })();
 
+
 /* ===================== 1) RUNE CURSOR TRAIL ===================== */
 (function initRuneTrail() {
   const isDesktop = window.matchMedia('(min-width: 1024px)').matches;
@@ -561,8 +579,8 @@ function handleSummonSubmit(event) {
 
   const RUNES = ['ᚱ', 'ᛉ', 'ᚦ', 'ᛟ', 'ᚨ', 'ᛖ', 'ᛗ', 'ᛞ'];
   let lastSpawn = 0;
-  const SPAWN_INTERVAL = 60; // ms
-  const RUNE_LIFETIME = 900; // ms
+  const SPAWN_INTERVAL = 60;
+  const RUNE_LIFETIME = 900;
 
   document.addEventListener('mousemove', (e) => {
     const now = performance.now();
@@ -608,7 +626,6 @@ function handleSummonSubmit(event) {
   if (!isDesktop) return;
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-  // Wait until the horizontal track exists (built by initHorizontalScroll)
   function attach() {
     const panels = document.querySelectorAll('.horizontal-scroll-track > section, .horizontal-scroll-track > footer');
     panels.forEach(panel => setupAmbient(panel));
@@ -657,7 +674,6 @@ function handleSummonSubmit(event) {
   }
 
   const AMBIENT_CONFIG = {
-    // Quest Log — floating feathers (drift down slowly)
     'quest-log': {
       spawn: (w, h) => ({
         x: Math.random() * w,
@@ -682,7 +698,6 @@ function handleSummonSubmit(event) {
       }
     },
 
-    // Contracts — spinning gold coins
     'contracts': {
       spawn: (w, h) => ({
         x: Math.random() * w,
@@ -707,7 +722,6 @@ function handleSummonSubmit(event) {
       }
     },
 
-    // Arsenal — forge sparks (rising fast)
     'bestiary-and-arsenal': {
       spawn: (w, h) => ({
         x: Math.random() * w,
@@ -738,7 +752,6 @@ function handleSummonSubmit(event) {
       }
     },
 
-    // Summons — raven feathers (falling, drifting sideways)
     'summons': {
       spawn: (w, h) => ({
         x: Math.random() * w,
@@ -771,7 +784,6 @@ function handleSummonSubmit(event) {
       }
     },
 
-    // Origins — dust motes (slowly drifting up)
     'origins': {
       spawn: (w, h) => ({
         x: Math.random() * w,
@@ -798,7 +810,6 @@ function handleSummonSubmit(event) {
     default: null
   };
 
-  // Wait for the track to be built by the horizontal scroll init
   const waitForTrack = setInterval(() => {
     if (document.querySelector('.horizontal-scroll-track')) {
       clearInterval(waitForTrack);
@@ -806,7 +817,6 @@ function handleSummonSubmit(event) {
     }
   }, 200);
 
-  // Safety: stop polling after 5s
   setTimeout(() => clearInterval(waitForTrack), 5000);
 })();
 
@@ -825,7 +835,6 @@ function handleSummonSubmit(event) {
     timeoutId = setTimeout(() => toast.classList.remove('visible'), 2000);
   }
 
-  // Find all mailto links and make them copy instead of opening
   document.querySelectorAll('a[href^="mailto:"]').forEach(link => {
     link.classList.add('copyable-email');
 
@@ -835,7 +844,6 @@ function handleSummonSubmit(event) {
       navigator.clipboard.writeText(email)
         .then(() => showToast())
         .catch(() => {
-          // Fallback for older browsers
           const ta = document.createElement('textarea');
           ta.value = email;
           ta.style.position = 'fixed';
@@ -853,14 +861,12 @@ function handleSummonSubmit(event) {
 
 /* ===================== 17) KEYBOARD SHORTCUTS OVERLAY ===================== */
 (function initShortcutsOverlay() {
-  // Build trigger button
   const trigger = document.createElement('button');
   trigger.className = 'shortcuts-trigger';
   trigger.innerHTML = '?';
   trigger.setAttribute('aria-label', 'Show keyboard shortcuts');
   document.body.appendChild(trigger);
 
-  // Build overlay
   const overlay = document.createElement('div');
   overlay.className = 'shortcuts-overlay';
   overlay.innerHTML = `
@@ -911,12 +917,8 @@ function handleSummonSubmit(event) {
 
   const closeBtn = overlay.querySelector('.shortcuts-close');
 
-  function open() {
-    overlay.classList.add('visible');
-  }
-  function close() {
-    overlay.classList.remove('visible');
-  }
+  function open() { overlay.classList.add('visible'); }
+  function close() { overlay.classList.remove('visible'); }
 
   trigger.addEventListener('click', open);
   closeBtn.addEventListener('click', close);
@@ -924,9 +926,7 @@ function handleSummonSubmit(event) {
     if (e.target === overlay) close();
   });
 
-  // Global keyboard handlers
   document.addEventListener('keydown', (e) => {
-    // Ignore if typing in an input
     const tag = document.activeElement?.tagName?.toLowerCase();
     if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
 

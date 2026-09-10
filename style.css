@@ -52,6 +52,7 @@ a {
   transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
               box-shadow 0.25s ease;
   will-change: transform;
+  filter: url(#parchment-burn);
 }
 
 .parchment:hover {
@@ -106,6 +107,13 @@ a {
   opacity: 1;
 }
 
+.parchment-burn-svg {
+  position: absolute;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
 
 /* =====================================================================
    WITCHER TRANSITION OVERLAY
@@ -153,21 +161,9 @@ a {
 }
 
 @keyframes witcher-ring-expand {
-  0% {
-    width: 10px;
-    height: 10px;
-    opacity: 1;
-    border-width: 3px;
-  }
-  70% {
-    opacity: 0.7;
-  }
-  100% {
-    width: 280px;
-    height: 280px;
-    opacity: 0;
-    border-width: 1px;
-  }
+  0% { width: 10px; height: 10px; opacity: 1; border-width: 3px; }
+  70% { opacity: 0.7; }
+  100% { width: 280px; height: 280px; opacity: 0; border-width: 1px; }
 }
 
 .witcher-rune-particle {
@@ -296,7 +292,6 @@ body.horizontal-scroll-active {
   opacity: 1;
 }
 
-/* 3D panel states */
 .horizontal-scroll-track > section.is-leaving-forward,
 .horizontal-scroll-track > footer.is-leaving-forward {
   transform: rotateY(-22deg) translateZ(-120px);
@@ -370,9 +365,7 @@ body.horizontal-scroll-active footer {
   pointer-events: none;
 }
 
-.scroll-indicator.visible {
-  opacity: 1;
-}
+.scroll-indicator.visible { opacity: 1; }
 
 .scroll-indicator .dot {
   width: 6px;
@@ -415,81 +408,152 @@ body.horizontal-scroll-active .horizontal-scroll-track::before {
 
 
 /* =====================================================================
-   RESPONSIVE — disable horizontal mode + 3D on small screens
+   FLIP CARDS
    ===================================================================== */
-@media (max-width: 1023px) {
-  body.horizontal-scroll-active {
-    overflow-y: auto;
-    height: auto;
-  }
-  .horizontal-scroll-track {
-    display: block;
+.flip-card {
+  perspective: 1600px;
+  height: 480px;
+  position: relative;
+}
+
+.flip-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.flip-card:hover .flip-card-inner,
+.flip-card.flipped .flip-card-inner {
+  transform: rotateY(180deg);
+}
+
+.flip-card-front,
+.flip-card-back {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.flip-card-back {
+  transform: rotateY(180deg);
+}
+
+@media (max-width: 767px) {
+  .flip-card {
     height: auto;
     perspective: none;
-    background-image: none;
   }
-  .horizontal-scroll-track::before {
+  .flip-card-inner {
+    transform: none !important;
+    position: static;
+    height: auto;
+  }
+  .flip-card-front,
+  .flip-card-back {
+    position: static;
+    transform: none;
+    backface-visibility: visible;
+    -webkit-backface-visibility: visible;
+    height: auto;
+  }
+  .flip-card-back {
     display: none;
   }
-  .horizontal-scroll-track > section,
-  .horizontal-scroll-track > footer {
-    min-width: 100%;
-    width: 100%;
-    height: auto;
-    overflow-y: visible;
-    transform: none !important;
-    opacity: 1 !important;
-  }
-  .parchment {
-    transform: none !important;
-  }
-  body.horizontal-scroll-active footer {
-    width: 100%;
-  }
-
-  /* Mobile background on body */
-  body {
-    background-image: url('witcher3back.png');
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
-    background-repeat: no-repeat;
-  }
-
-  body::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    background: linear-gradient(
-      180deg,
-      rgba(13, 14, 15, 0.85) 0%,
-      rgba(13, 14, 15, 0.75) 50%,
-      rgba(13, 14, 15, 0.9) 100%
-    );
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  main, header, footer {
-    position: relative;
-    z-index: 1;
-  }
 }
 
-/* Respect reduced-motion preference */
 @media (prefers-reduced-motion: reduce) {
-  .horizontal-scroll-track > section,
-  .horizontal-scroll-track > footer {
-    transition: none !important;
-    transform: none !important;
-    opacity: 1 !important;
-  }
-  .parchment,
-  .hero-medallion {
-    transition: none !important;
-    transform: none !important;
+  .flip-card-inner {
+    transition: none;
   }
 }
+
+
+/* =====================================================================
+   SIGN-CASTING
+   ===================================================================== */
+.witcher-sign {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9996;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+}
+
+.witcher-sign.igni {
+  width: 60px;
+  height: 60px;
+  background: radial-gradient(circle,
+    rgba(255, 100, 20, 0.7) 0%,
+    rgba(255, 60, 10, 0.35) 40%,
+    transparent 70%);
+  box-shadow:
+    0 0 30px rgba(255, 100, 20, 0.8),
+    0 0 60px rgba(255, 60, 10, 0.4);
+  animation: sign-burst 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.witcher-sign.aard {
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(100, 180, 255, 0.9);
+  box-shadow:
+    0 0 20px rgba(100, 180, 255, 0.8),
+    inset 0 0 20px rgba(100, 180, 255, 0.4);
+  animation: sign-shockwave 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.witcher-sign.quen {
+  width: 40px;
+  height: 40px;
+  border: 2px solid rgba(237, 192, 105, 0.9);
+  background: radial-gradient(circle,
+    rgba(237, 192, 105, 0.15) 0%,
+    transparent 70%);
+  box-shadow:
+    0 0 30px rgba(237, 192, 105, 0.7),
+    inset 0 0 40px rgba(237, 192, 105, 0.3);
+  animation: sign-dome 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.witcher-sign.yrden {
+  width: 30px;
+  height: 30px;
+  border: 2px dashed rgba(180, 130, 255, 0.9);
+  box-shadow:
+    0 0 25px rgba(180, 130, 255, 0.7),
+    inset 0 0 25px rgba(180, 130, 255, 0.3);
+  animation: sign-yrden 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes sign-burst {
+  0% { opacity: 1; transform: translate(-50%, -50%) scale(0.3); }
+  60% { opacity: 0.9; transform: translate(-50%, -50%) scale(1.6); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(2.2); }
+}
+
+@keyframes sign-shockwave {
+  0% { opacity: 1; transform: translate(-50%, -50%) scale(0.5); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(14); }
+}
+
+@keyframes sign-dome {
+  0% { opacity: 1; transform: translate(-50%, -50%) scale(0.4); }
+  50% { opacity: 0.8; transform: translate(-50%, -50%) scale(1.5); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(2); }
+}
+
+@keyframes sign-yrden {
+  0% { opacity: 1; transform: translate(-50%, -50%) scale(0.5) rotate(0deg); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(3.5) rotate(180deg); }
+}
+
+
 /* =====================================================================
    1) RUNE CURSOR TRAIL
    ===================================================================== */
@@ -507,13 +571,8 @@ body.horizontal-scroll-active .horizontal-scroll-track::before {
   transform: translate(-50%, -50%);
 }
 
-@media (max-width: 1023px) {
-  .rune-trail { display: none; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .rune-trail { display: none; }
-}
+@media (max-width: 1023px) { .rune-trail { display: none; } }
+@media (prefers-reduced-motion: reduce) { .rune-trail { display: none; } }
 
 
 /* =====================================================================
@@ -529,9 +588,7 @@ body.horizontal-scroll-active .horizontal-scroll-track::before {
   opacity: 0.85;
 }
 
-@media (max-width: 1023px) {
-  .ambient-canvas { display: none; }
-}
+@media (max-width: 1023px) { .ambient-canvas { display: none; } }
 
 
 /* =====================================================================
@@ -699,14 +756,9 @@ body.horizontal-scroll-active .horizontal-scroll-track::before {
   border-bottom: 1px dashed rgba(78, 70, 56, 0.3);
 }
 
-.shortcut-row:last-child {
-  border-bottom: none;
-}
+.shortcut-row:last-child { border-bottom: none; }
 
-.shortcut-keys {
-  display: flex;
-  gap: 6px;
-}
+.shortcut-keys { display: flex; gap: 6px; }
 
 .kbd {
   display: inline-flex;
@@ -723,4 +775,74 @@ body.horizontal-scroll-active .horizontal-scroll-track::before {
   color: #edc069;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+}
+
+
+/* =====================================================================
+   RESPONSIVE — disable horizontal mode + 3D on small screens
+   ===================================================================== */
+@media (max-width: 1023px) {
+  body.horizontal-scroll-active {
+    overflow-y: auto;
+    height: auto;
+  }
+  .horizontal-scroll-track {
+    display: block;
+    height: auto;
+    perspective: none;
+    background-image: none;
+  }
+  .horizontal-scroll-track::before { display: none; }
+  .horizontal-scroll-track > section,
+  .horizontal-scroll-track > footer {
+    min-width: 100%;
+    width: 100%;
+    height: auto;
+    overflow-y: visible;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+  .parchment { transform: none !important; }
+  body.horizontal-scroll-active footer { width: 100%; }
+
+  body {
+    background-image: url('witcher3back.png');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(
+      180deg,
+      rgba(13, 14, 15, 0.85) 0%,
+      rgba(13, 14, 15, 0.75) 50%,
+      rgba(13, 14, 15, 0.9) 100%
+    );
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  main, header, footer {
+    position: relative;
+    z-index: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .horizontal-scroll-track > section,
+  .horizontal-scroll-track > footer {
+    transition: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+  .parchment,
+  .hero-medallion {
+    transition: none !important;
+    transform: none !important;
+  }
 }

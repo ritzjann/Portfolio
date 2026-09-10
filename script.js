@@ -254,6 +254,70 @@ function handleSummonSubmit(event) {
     }
     return html;
   }
+/* ===================== HORIZONTAL SCROLL ===================== */
+(function initHorizontalScroll() {
+  // Only enable on desktop — mobile touch is awkward for this pattern
+  const isDesktop = window.matchMedia('(min-width: 1024px)').matches;
+  if (!isDesktop) return;
+
+  const main = document.querySelector('main');
+  const sections = Array.from(main.querySelectorAll('section'));
+  if (!main || sections.length === 0) return;
+
+  // Enable the mode
+  document.body.classList.add('horizontal-scroll-active');
+
+  // Wrap all sections in a horizontal track
+  const track = document.createElement('div');
+  track.className = 'horizontal-scroll-track';
+  sections.forEach(sec => track.appendChild(sec));
+  main.appendChild(track);
+
+  // Total horizontal distance we can scroll
+  let maxScrollX = 0;
+  let currentX = 0;
+
+  function measure() {
+    // Track width minus the viewport width = how far we can translate
+    maxScrollX = track.scrollWidth - window.innerWidth;
+  }
+
+  function updateScrollBounds() {
+    // The body height must equal the horizontal distance so that
+    // scrolling vertically maps 1:1 to horizontal movement
+    document.body.style.height = `${window.innerHeight + maxScrollX}px`;
+  }
+
+  function onScroll() {
+    // Map vertical scroll position to horizontal translation
+    const y = window.scrollY;
+    currentX = Math.min(y, maxScrollX);
+    track.style.transform = `translate3d(${-currentX}px, 0, 0)`;
+  }
+
+  // Re-measure on load + resize
+  function refresh() {
+    // Temporarily reset transform to measure accurately
+    track.style.transform = 'translate3d(0,0,0)';
+    measure();
+    updateScrollBounds();
+    onScroll();
+  }
+
+  window.addEventListener('resize', refresh);
+  window.addEventListener('scroll', onScroll, { passive: true });
+
+  // Wait a frame so images/fonts settle before measuring
+  requestAnimationFrame(() => {
+    setTimeout(refresh, 100);
+  });
+
+  // Re-measure again after all resources load (fonts, images)
+  window.addEventListener('load', refresh);
+
+  // Also expose so other code can refresh if needed
+  window.refreshHorizontalScroll = refresh;
+})();
 
   function tick() {
     const current = phrases[phraseIndex];

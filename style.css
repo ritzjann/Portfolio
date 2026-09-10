@@ -242,6 +242,8 @@ body.horizontal-scroll-active {
   flex-wrap: nowrap;
   will-change: transform;
   height: 100vh;
+  position: relative;
+  isolation: isolate;
 }
 
 .horizontal-scroll-track > section {
@@ -347,7 +349,7 @@ body.horizontal-scroll-active footer {
    Because the track is as wide as all sections combined,
    the image stretches across the whole horizontal journey. */
 body.horizontal-scroll-active .horizontal-scroll-track {
-  background-image: url('witcher-bg.jpg');
+  background-image: url('witcher3back.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;

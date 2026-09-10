@@ -59,3 +59,137 @@
 .parchment:hover::after {
   opacity: 1;
 }
+
+/* ===== WITCHER TRANSITION OVERLAY ===== */
+
+/* Full-screen overlay that flashes on click */
+.witcher-transition-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  background: radial-gradient(
+    circle at var(--click-x, 50%) var(--click-y, 50%),
+    rgba(237, 192, 105, 0.45) 0%,
+    rgba(237, 192, 105, 0.15) 25%,
+    rgba(197, 155, 72, 0.05) 50%,
+    transparent 75%
+  );
+  opacity: 0;
+  transition: opacity 0.35s ease-out;
+  mix-blend-mode: screen;
+}
+
+.witcher-transition-overlay.active {
+  opacity: 1;
+  transition: opacity 0.15s ease-in;
+}
+
+/* Expanding golden ring (sign effect) */
+.witcher-transition-ring {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9998;
+  border: 2px solid rgba(237, 192, 105, 0.85);
+  border-radius: 50%;
+  width: 10px;
+  height: 10px;
+  transform: translate(-50%, -50%);
+  box-shadow:
+    0 0 20px rgba(237, 192, 105, 0.8),
+    0 0 40px rgba(197, 155, 72, 0.5),
+    inset 0 0 20px rgba(237, 192, 105, 0.4);
+  opacity: 0;
+}
+
+.witcher-transition-ring.expand {
+  animation: witcher-ring-expand 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes witcher-ring-expand {
+  0% {
+    width: 10px;
+    height: 10px;
+    opacity: 1;
+    border-width: 3px;
+  }
+  70% {
+    opacity: 0.7;
+  }
+  100% {
+    width: 280px;
+    height: 280px;
+    opacity: 0;
+    border-width: 1px;
+  }
+}
+
+/* Rune flare particles */
+.witcher-rune-particle {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9997;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  color: #edc069;
+  text-shadow:
+    0 0 8px rgba(237, 192, 105, 0.9),
+    0 0 16px rgba(237, 192, 105, 0.5);
+  opacity: 0;
+  transform: translate(-50%, -50%);
+  user-select: none;
+}
+
+.witcher-rune-particle.flare {
+  animation: witcher-rune-flare 0.9s ease-out forwards;
+}
+
+@keyframes witcher-rune-flare {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.5);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -120%) scale(0.9);
+  }
+}
+
+/* Subtle screen shake on click */
+.witcher-screen-shake {
+  animation: witcher-shake 0.3s ease-out;
+}
+
+@keyframes witcher-shake {
+  0%, 100% { transform: translate(0, 0); }
+  20% { transform: translate(-2px, 1px); }
+  40% { transform: translate(2px, -1px); }
+  60% { transform: translate(-1px, 2px); }
+  80% { transform: translate(1px, -2px); }
+}
+
+/* Add a golden cursor pulse on interactive elements */
+a, button {
+  position: relative;
+  overflow: hidden;
+}
+
+a::after, button::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, rgba(237, 192, 105, 0.35) 0%, transparent 60%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+a:active::after, button:active::after {
+  opacity: 1;
+  transition: opacity 0s;
+}
+

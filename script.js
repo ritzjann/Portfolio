@@ -205,7 +205,97 @@ function handleSummonSubmit(event) {
       isTransitioning = false;
     }, 800);
   }
+/* ===================== TYPING EFFECT ===================== */
+(function initTypingEffect() {
+  const lineEl = document.getElementById('typed-line');
+  const cursorEl = document.getElementById('typed-cursor');
+  if (!lineEl || !cursorEl) return;
 
+  // Phrases to cycle through.
+  // Each phrase can mix plain text and a highlighted tail segment.
+  // `prefix` = normal white text | `highlight` = gold italic text
+  const phrases = [
+    { prefix: "I want to make things ",        highlight: "that make a difference." },
+    { prefix: "I want to build things ",       highlight: "that make an impact." },
+    { prefix: "I want to create things ",      highlight: "that tell a story." },
+    { prefix: "I want to write code ",         highlight: "that feels like magic." },
+    { prefix: "I want to solve problems ",     highlight: "through curiosity and craft." }
+  ];
+
+  // Timing (ms)
+  const TYPE_SPEED   = 55;   // per character
+  const DELETE_SPEED = 30;   // per character
+  const PAUSE_FULL   = 2200; // pause at full phrase
+  const PAUSE_EMPTY  = 500;  // pause when phrase is empty
+
+  let phraseIndex = 0;
+  let charIndex = 0;
+  let isDeleting = false;
+
+  /**
+   * Builds the HTML for the currently-visible characters.
+   * Keeps the highlighted tail in gold once we pass the split point.
+   */
+  function renderPhrase(phrase, visibleCount) {
+    const fullPlain = phrase.prefix + phrase.highlight;
+
+    // How many chars of the plain prefix are visible?
+    const plainVisible = Math.min(visibleCount, phrase.prefix.length);
+
+    // How many chars of the highlighted tail are visible?
+    const highlightVisible = Math.max(0, visibleCount - phrase.prefix.length);
+
+    const plainText = fullPlain.slice(0, plainVisible);
+    const highlightText = phrase.highlight.slice(0, highlightVisible);
+
+    let html = plainText;
+    if (highlightText) {
+      html += `<span class="text-primary italic drop-shadow-[0_2px_10px_rgba(237,192,105,0.4)]">${highlightText}</span>`;
+    }
+    return html;
+  }
+
+  function tick() {
+    const current = phrases[phraseIndex];
+    const fullText = current.prefix + current.highlight;
+
+    if (!isDeleting) {
+      // ---- TYPING FORWARD ----
+      charIndex++;
+      lineEl.innerHTML = renderPhrase(current, charIndex);
+
+      if (charIndex >= fullText.length) {
+        // Finished typing the full phrase — pause, then start deleting
+        cursorEl.classList.add('paused');
+        isDeleting = true;
+        setTimeout(tick, PAUSE_FULL);
+        return;
+      }
+      setTimeout(tick, TYPE_SPEED);
+    } else {
+      // ---- DELETING ----
+      charIndex--;
+      lineEl.innerHTML = renderPhrase(current, charIndex);
+
+      if (charIndex <= 0) {
+        // Finished deleting — move to next phrase
+        charIndex = 0;
+        isDeleting = false;
+        phraseIndex = (phraseIndex + 1) % phrases.length;
+        cursorEl.classList.remove('paused');
+        setTimeout(tick, PAUSE_EMPTY);
+        return;
+      }
+      setTimeout(tick, DELETE_SPEED);
+    }
+  }
+
+  // Kick off after a short delay so the page can settle
+  setTimeout(() => {
+    cursorEl.classList.remove('paused');
+    tick();
+  }, 600);
+})();
   function attachTransitionHandlers() {
     const clickables = document.querySelectorAll('a, button');
     clickables.forEach(el => {

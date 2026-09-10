@@ -193,3 +193,24 @@ a:active::after, button:active::after {
   transition: opacity 0s;
 }
 
+/* ===== TYPING EFFECT ===== */
+#typed-cursor {
+  display: inline-block;
+  font-size: 0.85em;
+  transform: translateY(-0.05em);
+  animation: cursor-blink 1s steps(1) infinite;
+  color: #edc069;
+  text-shadow: 0 0 12px rgba(237, 192, 105, 0.7);
+  margin-left: 2px;
+}
+
+@keyframes cursor-blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+/* When typing is paused, cursor stays solid */
+#typed-cursor.paused {
+  animation: none;
+  opacity: 1;
+}

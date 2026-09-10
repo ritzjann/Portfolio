@@ -1,4 +1,3 @@
-
 .parchment {
   position: relative;
 }
@@ -9,9 +8,21 @@
   inset: 0;
   border-radius: inherit;
   padding: 1px;
-  background: linear-gradient(135deg, rgba(237, 192, 105, 0.25), rgba(78, 70, 56, 0.3), rgba(237, 192, 105, 0.05));
+  background: linear-gradient(
+    135deg, 
+    rgba(237, 192, 105, 0.25), 
+    rgba(78, 70, 56, 0.3), 
+    rgba(237, 192, 105, 0.05)
+  );
+  
+  /* Box sizing lock */
+  box-sizing: border-box;
+  
+  /* Cross-browser mask compositing for gradient borders */
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   mask-composite: exclude;
+  
   pointer-events: none;
 }

@@ -35,24 +35,34 @@ a {
 
 
 /* =====================================================================
-   PARCHMENT CARD
+   PARCHMENT CARD — clean edges, no text distortion
    ===================================================================== */
 .parchment {
   position: relative;
-  background-image: repeating-linear-gradient(
-    45deg,
-    rgba(237, 192, 105, 0.015) 0px,
-    rgba(237, 192, 105, 0.015) 2px,
-    transparent 2px,
-    transparent 6px
-  );
+  background-image:
+    repeating-linear-gradient(
+      45deg,
+      rgba(237, 192, 105, 0.015) 0px,
+      rgba(237, 192, 105, 0.015) 2px,
+      transparent 2px,
+      transparent 6px
+    ),
+    radial-gradient(
+      circle at 30% 20%,
+      rgba(120, 80, 30, 0.06),
+      transparent 60%
+    ),
+    radial-gradient(
+      circle at 70% 80%,
+      rgba(100, 60, 20, 0.05),
+      transparent 60%
+    );
   isolation: isolate;
   overflow: hidden;
   transform-style: preserve-3d;
   transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
               box-shadow 0.25s ease;
   will-change: transform;
-  filter: url(#parchment-burn);
 }
 
 .parchment:hover {
@@ -105,13 +115,6 @@ a {
 
 .parchment:hover::after {
   opacity: 1;
-}
-
-.parchment-burn-svg {
-  position: absolute;
-  width: 0;
-  height: 0;
-  pointer-events: none;
 }
 
 
@@ -846,4 +849,3 @@ body.horizontal-scroll-active .horizontal-scroll-track::before {
     transform: none !important;
   }
 }
-

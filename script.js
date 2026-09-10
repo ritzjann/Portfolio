@@ -1,20 +1,3 @@
-/* ===================== PARCHMENT BURN FILTER ===================== */
-(function injectParchmentFilter() {
-  const svgNS = 'http://www.w3.org/2000/svg';
-  const svg = document.createElementNS(svgNS, 'svg');
-  svg.setAttribute('class', 'parchment-burn-svg');
-  svg.setAttribute('aria-hidden', 'true');
-  svg.innerHTML = `
-    <defs>
-      <filter id="parchment-burn" x="-5%" y="-5%" width="110%" height="110%">
-        <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="3" seed="7" result="noise"/>
-        <feDisplacementMap in="SourceGraphic" in2="noise" scale="4" xChannelSelector="R" yChannelSelector="G"/>
-      </filter>
-    </defs>
-  `;
-  document.body.appendChild(svg);
-})();
-
 
 /* ===================== EMBER CANVAS ===================== */
 (function initEmbers() {

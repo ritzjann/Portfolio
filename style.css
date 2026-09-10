@@ -1,5 +1,16 @@
+/* ===== PARCHMENT CARD ===== */
 .parchment {
   position: relative;
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(237, 192, 105, 0.015) 0px,
+    rgba(237, 192, 105, 0.015) 2px,
+    transparent 2px,
+    transparent 6px
+  );
+  /* Ensures gradient border clips correctly even with rounded corners */
+  isolation: isolate;
+  overflow: hidden;
 }
 
 .parchment::before {
@@ -9,20 +20,42 @@
   border-radius: inherit;
   padding: 1px;
   background: linear-gradient(
-    135deg, 
-    rgba(237, 192, 105, 0.25), 
-    rgba(78, 70, 56, 0.3), 
+    135deg,
+    rgba(237, 192, 105, 0.25),
+    rgba(78, 70, 56, 0.3),
     rgba(237, 192, 105, 0.05)
   );
-  
+
   /* Box sizing lock */
   box-sizing: border-box;
-  
+
   /* Cross-browser mask compositing for gradient borders */
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   mask-composite: exclude;
-  
+
   pointer-events: none;
+  z-index: 1;
+}
+
+/* Optional: Add a subtle inner golden glow on hover */
+.parchment::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    circle at 50% 0%,
+    rgba(237, 192, 105, 0.06),
+    transparent 60%
+  );
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  z-index: 0;
+}
+
+.parchment:hover::after {
+  opacity: 1;
 }

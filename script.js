@@ -17,9 +17,7 @@
   resizeCanvas();
 
   class Ember {
-    constructor() {
-      this.reset();
-    }
+    constructor() { this.reset(); }
 
     reset() {
       this.x = Math.random() * width;
@@ -35,10 +33,7 @@
       this.y -= this.speedY;
       this.x += this.speedX + Math.sin(this.y * 0.01) * 0.3;
       this.opacity -= this.fade;
-
-      if (this.opacity <= 0 || this.y < 0) {
-        this.reset();
-      }
+      if (this.opacity <= 0 || this.y < 0) this.reset();
     }
 
     draw() {
@@ -63,16 +58,12 @@
 
   function animate() {
     ctx.clearRect(0, 0, width, height);
-    embers.forEach(ember => {
-      ember.update();
-      ember.draw();
-    });
+    embers.forEach(ember => { ember.update(); ember.draw(); });
     requestAnimationFrame(animate);
   }
 
   initEmbers();
   animate();
-
   window.addEventListener('resize', initEmbers);
 })();
 
@@ -108,14 +99,10 @@ function handleSummonSubmit(event) {
     { prefix: "I want to solve problems ", highlight: "through curiosity and craft." }
   ];
 
-  const TYPE_SPEED   = 55;
-  const DELETE_SPEED = 30;
-  const PAUSE_FULL   = 2200;
-  const PAUSE_EMPTY  = 500;
+  const TYPE_SPEED = 55, DELETE_SPEED = 30;
+  const PAUSE_FULL = 2200, PAUSE_EMPTY = 500;
 
-  let phraseIndex = 0;
-  let charIndex = 0;
-  let isDeleting = false;
+  let phraseIndex = 0, charIndex = 0, isDeleting = false;
 
   function renderPhrase(phrase, visibleCount) {
     const fullPlain = phrase.prefix + phrase.highlight;
@@ -170,7 +157,7 @@ function handleSummonSubmit(event) {
 })();
 
 
-/* ===================== SCROLL SPY (horizontal-aware) ===================== */
+/* ===================== SCROLL SPY ===================== */
 (function initScrollSpy() {
   const sections = document.querySelectorAll('section[id]');
   const navLinks = document.querySelectorAll('#nav-links .nav-item');
@@ -190,10 +177,7 @@ function handleSummonSubmit(event) {
         });
       }
     });
-  }, {
-    root: null,
-    threshold: 0.4
-  });
+  }, { root: null, threshold: 0.4 });
 
   sections.forEach(sec => observer.observe(sec));
 })();
@@ -330,11 +314,13 @@ function handleSummonSubmit(event) {
 
   document.body.classList.add('horizontal-scroll-active');
 
-  // Build the horizontal track
   const track = document.createElement('div');
   track.className = 'horizontal-scroll-track';
   panels.forEach(p => track.appendChild(p));
   main.appendChild(track);
+
+  // Mark initial panel active for 3D
+  panels[0].classList.add('is-active');
 
   let currentPanel = 0;
   let currentTranslateX = 0;
@@ -356,6 +342,30 @@ function handleSummonSubmit(event) {
   function updateIndicator() {
     indicator.querySelector('.current').textContent =
       String(currentPanel + 1).padStart(2, '0');
+  }
+
+  // --- 3D panel state management ---
+  function apply3DStates(fromIndex, toIndex) {
+    const goingForward = toIndex > fromIndex;
+    const leavingClass  = goingForward ? 'is-leaving-forward'  : 'is-leaving-back';
+    const enteringClass = goingForward ? 'is-entering-forward' : 'is-entering-back';
+
+    const prev = panels[fromIndex];
+    const next = panels[toIndex];
+
+    // Previous panel leaves
+    prev.classList.remove('is-active');
+    prev.classList.add(leavingClass);
+    setTimeout(() => prev.classList.remove(leavingClass), 800);
+
+    // Next panel enters (starts rotated) then snaps to active
+    next.classList.add(enteringClass);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        next.classList.remove(enteringClass);
+        next.classList.add('is-active');
+      });
+    });
   }
 
   // --- Animated translate ---
@@ -387,7 +397,11 @@ function handleSummonSubmit(event) {
     index = Math.max(0, Math.min(panels.length - 1, index));
     if (index === currentPanel) return;
 
+    const fromIndex = currentPanel;
     isAnimating = true;
+
+    apply3DStates(fromIndex, index);
+
     currentPanel = index;
     updateIndicator();
 
@@ -401,12 +415,8 @@ function handleSummonSubmit(event) {
     setTimeout(() => { isCooldown = false; }, 900);
   }
 
-  // --- Wheel handling ---
   function onWheel(e) {
-    if (isAnimating || isCooldown) {
-      e.preventDefault();
-      return;
-    }
+    if (isAnimating || isCooldown) { e.preventDefault(); return; }
 
     const activePanel = panels[currentPanel];
     const atTop = activePanel.scrollTop <= 0;
@@ -429,7 +439,6 @@ function handleSummonSubmit(event) {
     }
   }
 
-  // --- Keyboard ---
   function onKey(e) {
     if (isAnimating || isCooldown) return;
     if (e.key === 'ArrowRight' || e.key === 'PageDown') {
@@ -445,7 +454,6 @@ function handleSummonSubmit(event) {
     }
   }
 
-  // --- Resize ---
   function onResize() {
     currentTranslateX = -currentPanel * window.innerWidth;
     track.style.transform = `translate3d(${currentTranslateX}px, 0, 0)`;
@@ -455,7 +463,6 @@ function handleSummonSubmit(event) {
   window.addEventListener('keydown', onKey);
   window.addEventListener('resize', onResize);
 
-  // Hook nav anchors so clicking them advances the panel horizontally
   document.querySelectorAll('a[href^="#"]').forEach(link => {
     link.addEventListener('click', (e) => {
       const id = link.getAttribute('href').slice(1);
@@ -470,4 +477,78 @@ function handleSummonSubmit(event) {
 
   track.style.transform = 'translate3d(0,0,0)';
   updateIndicator();
+})();
+
+
+/* ===================== 3D TILT (PARCHMENT + MEDALLION) ===================== */
+(function init3DTilt() {
+  const isDesktop = window.matchMedia('(min-width: 1024px)').matches;
+  if (!isDesktop) return;
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  // --- Parchment card tilt ---
+  function attachParchmentTilt() {
+    document.querySelectorAll('.parchment').forEach(card => {
+      card.addEventListener('mousemove', (e) => {
+        const rect = card.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+
+        const dx = (e.clientX - cx) / (rect.width / 2);
+        const dy = (e.clientY - cy) / (rect.height / 2);
+
+        const rotY = Math.max(-1, Math.min(1, dx)) * 6;
+        const rotX = -Math.max(-1, Math.min(1, dy)) * 6;
+
+        card.style.transform =
+          `perspective(900px) rotateX(${rotX}deg) rotateY(${rotY}deg) translateZ(0)`;
+      });
+
+      card.addEventListener('mouseleave', () => {
+        card.style.transform =
+          'perspective(900px) rotateX(0deg) rotateY(0deg) translateZ(0)';
+      });
+    });
+  }
+
+  // --- Hero medallion tilt ---
+  function attachMedallionTilt() {
+    const medallion = document.querySelector('.hero-medallion');
+    const hero = document.getElementById('hero');
+    if (!medallion || !hero) return;
+
+    hero.addEventListener('mousemove', (e) => {
+      const rect = hero.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+
+      const dx = (e.clientX - cx) / (rect.width / 2);
+      const dy = (e.clientY - cy) / (rect.height / 2);
+
+      const rotY = Math.max(-1, Math.min(1, dx)) * 12;
+      const rotX = -Math.max(-1, Math.min(1, dy)) * 12;
+
+      medallion.style.transform =
+        `perspective(1000px) rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+    });
+
+    hero.addEventListener('mouseleave', () => {
+      medallion.style.transform =
+        'perspective(1000px) rotateX(0deg) rotateY(0deg)';
+    });
+  }
+
+  function boot() {
+    attachParchmentTilt();
+    attachMedallionTilt();
+    window.attachParchmentTilt = attachParchmentTilt;
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot);
+  } else {
+    boot();
+  }
+
+  window.addEventListener('load', attachParchmentTilt);
 })();

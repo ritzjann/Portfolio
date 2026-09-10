@@ -48,6 +48,21 @@ a {
   );
   isolation: isolate;
   overflow: hidden;
+  transform-style: preserve-3d;
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.25s ease;
+  will-change: transform;
+}
+
+.parchment:hover {
+  box-shadow:
+    0 20px 40px rgba(0, 0, 0, 0.5),
+    0 0 30px rgba(237, 192, 105, 0.1);
+}
+
+.parchment > * {
+  transform: translateZ(20px);
+  transition: transform 0.25s ease;
 }
 
 .parchment::before {
@@ -228,6 +243,16 @@ a:active::after, button:active::after {
 
 
 /* =====================================================================
+   HERO MEDALLION 3D TILT
+   ===================================================================== */
+.hero-medallion {
+  transform-style: preserve-3d;
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+
+/* =====================================================================
    HORIZONTAL SCROLL MODE
    ===================================================================== */
 body.horizontal-scroll-active {
@@ -244,9 +269,12 @@ body.horizontal-scroll-active {
   height: 100vh;
   position: relative;
   isolation: isolate;
+  perspective: 2400px;
+  perspective-origin: 50% 50%;
 }
 
-.horizontal-scroll-track > section {
+.horizontal-scroll-track > section,
+.horizontal-scroll-track > footer {
   min-width: 100vw;
   width: 100vw;
   flex: 0 0 100vw;
@@ -255,6 +283,48 @@ body.horizontal-scroll-active {
   overflow-y: auto;
   overflow-x: hidden;
   scroll-behavior: smooth;
+  background: transparent !important;
+  position: relative;
+  z-index: 1;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  will-change: transform, opacity;
+  transition:
+    transform 0.75s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity   0.75s cubic-bezier(0.22, 1, 0.36, 1);
+  transform: rotateY(0deg) translateZ(0);
+  opacity: 1;
+}
+
+/* 3D panel states */
+.horizontal-scroll-track > section.is-leaving-forward,
+.horizontal-scroll-track > footer.is-leaving-forward {
+  transform: rotateY(-22deg) translateZ(-120px);
+  opacity: 0.35;
+}
+
+.horizontal-scroll-track > section.is-leaving-back,
+.horizontal-scroll-track > footer.is-leaving-back {
+  transform: rotateY(22deg) translateZ(-120px);
+  opacity: 0.35;
+}
+
+.horizontal-scroll-track > section.is-entering-forward,
+.horizontal-scroll-track > footer.is-entering-forward {
+  transform: rotateY(22deg) translateZ(-120px);
+  opacity: 0.35;
+}
+
+.horizontal-scroll-track > section.is-entering-back,
+.horizontal-scroll-track > footer.is-entering-back {
+  transform: rotateY(-22deg) translateZ(-120px);
+  opacity: 0.35;
+}
+
+.horizontal-scroll-track > section.is-active,
+.horizontal-scroll-track > footer.is-active {
+  transform: rotateY(0deg) translateZ(0);
+  opacity: 1;
 }
 
 .horizontal-scroll-track > section#hero {
@@ -319,35 +389,8 @@ body.horizontal-scroll-active footer {
 
 
 /* =====================================================================
-   RESPONSIVE — disable horizontal mode on small screens
+   GLOBAL BACKGROUND
    ===================================================================== */
-@media (max-width: 1023px) {
-  body.horizontal-scroll-active {
-    overflow-y: auto;
-    height: auto;
-  }
-  .horizontal-scroll-track {
-    display: block;
-    height: auto;
-  }
-  .horizontal-scroll-track > section {
-    min-width: 100%;
-    width: 100%;
-    height: auto;
-    overflow-y: visible;
-  }
-  body.horizontal-scroll-active footer {
-    width: 100%;
-  }
-}
-
-/* =====================================================================
-   GLOBAL BACKGROUND — one continuous image behind every panel
-   ===================================================================== */
-
-/* The track itself gets the background.
-   Because the track is as wide as all sections combined,
-   the image stretches across the whole horizontal journey. */
 body.horizontal-scroll-active .horizontal-scroll-track {
   background-image: url('witcher3back.png');
   background-size: cover;
@@ -356,8 +399,6 @@ body.horizontal-scroll-active .horizontal-scroll-track {
   background-attachment: scroll;
 }
 
-/* A dark overlay on top of the background so text stays readable.
-   This layer sits behind all the sections but above the image. */
 body.horizontal-scroll-active .horizontal-scroll-track::before {
   content: "";
   position: absolute;
@@ -372,18 +413,80 @@ body.horizontal-scroll-active .horizontal-scroll-track::before {
   z-index: 0;
 }
 
-/* Each section becomes transparent so the track background shows through.
-   Remove the solid `bg-surface` / `bg-surface-container-lowest` utilities
-   from your section classes OR override them here. */
-body.horizontal-scroll-active .horizontal-scroll-track > section {
-  background: transparent !important;
-  position: relative;
-  z-index: 1;
+
+/* =====================================================================
+   RESPONSIVE — disable horizontal mode + 3D on small screens
+   ===================================================================== */
+@media (max-width: 1023px) {
+  body.horizontal-scroll-active {
+    overflow-y: auto;
+    height: auto;
+  }
+  .horizontal-scroll-track {
+    display: block;
+    height: auto;
+    perspective: none;
+    background-image: none;
+  }
+  .horizontal-scroll-track::before {
+    display: none;
+  }
+  .horizontal-scroll-track > section,
+  .horizontal-scroll-track > footer {
+    min-width: 100%;
+    width: 100%;
+    height: auto;
+    overflow-y: visible;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+  .parchment {
+    transform: none !important;
+  }
+  body.horizontal-scroll-active footer {
+    width: 100%;
+  }
+
+  /* Mobile background on body */
+  body {
+    background-image: url('witcher3back.png');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(
+      180deg,
+      rgba(13, 14, 15, 0.85) 0%,
+      rgba(13, 14, 15, 0.75) 50%,
+      rgba(13, 14, 15, 0.9) 100%
+    );
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  main, header, footer {
+    position: relative;
+    z-index: 1;
+  }
 }
 
-/* The footer too */
-body.horizontal-scroll-active footer {
-  background: transparent !important;
-  position: relative;
-  z-index: 1;
+/* Respect reduced-motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .horizontal-scroll-track > section,
+  .horizontal-scroll-track > footer {
+    transition: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+  .parchment,
+  .hero-medallion {
+    transition: none !important;
+    transform: none !important;
+  }
 }

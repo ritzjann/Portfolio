@@ -306,7 +306,6 @@ function handleSummonSubmit(event) {
   window.attachTransitionHandlers = attachTransitionHandlers;
 })();
 
-
 /* ===================== HORIZONTAL SCROLL (snap-based) ===================== */
 (function initHorizontalScroll() {
   const isDesktop = window.matchMedia('(min-width: 1024px)').matches;
@@ -395,21 +394,66 @@ function handleSummonSubmit(event) {
     requestAnimationFrame(step);
   }
 
+  // --- NEW SPLASH TRANSITION LOGIC ---
+  function triggerSplashTransition(targetIndex) {
+    // 1. Create splash overlay if it doesn't exist
+    let splashOverlay = document.getElementById('page-splash-overlay');
+    if (!splashOverlay) {
+      splashOverlay = document.createElement('div');
+      splashOverlay.id = 'page-splash-overlay';
+      splashOverlay.innerHTML = `
+        <div class="splash-content">
+          <div class="splash-medallion">
+            <svg class="wolf-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="50" cy="50" r="46" stroke="#edc069" stroke-width="2.5" opacity="0.8"/>
+              <circle cx="50" cy="50" r="42" stroke="#edc069" stroke-width="0.8" opacity="0.4"/>
+              <circle cx="50" cy="50" r="38" stroke="#edc069" stroke-width="1.2" opacity="0.6"/>
+              <path d="M50 14 L61 34 L82 39 L67 54 L71 76 L50 66 L29 76 L33 54 L18 39 L39 34 Z" fill="#edc069" opacity="0.9" stroke="#edc069" stroke-width="1.5"/>
+              <circle cx="50" cy="50" r="11" fill="#0d0e0f" stroke="#edc069" stroke-width="2"/>
+              <circle cx="45" cy="48" r="2" fill="#edc069"/>
+              <circle cx="55" cy="48" r="2" fill="#edc069"/>
+              <path d="M46 56 L50 62 L54 56" stroke="#edc069" stroke-width="1.5" fill="none"/>
+            </svg>
+          </div>
+          <h1 class="splash-title">School of the Wolf</h1>
+          <p class="splash-subtitle">Entering the Next Chapter</p>
+        </div>
+      `;
+      document.body.appendChild(splashOverlay);
+    }
+
+    // 2. Show splash
+    splashOverlay.classList.add('active');
+    splashOverlay.style.display = 'flex';
+
+    // 3. Wait for animation then change panel
+    setTimeout(() => {
+      // Hide splash
+      splashOverlay.classList.remove('active');
+      
+      // Execute the actual panel change
+      const fromIndex = currentPanel;
+      isAnimating = true;
+      apply3DStates(fromIndex, targetIndex);
+      currentPanel = targetIndex;
+      updateIndicator();
+      
+      animateTranslate(-currentPanel * window.innerWidth, 700, () => {
+        isAnimating = false;
+        // Hide splash fully after transition
+        setTimeout(() => {
+          splashOverlay.style.display = 'none';
+        }, 400);
+      });
+    }, 1200); // 1.2 seconds of splash screen
+  }
+
   function goToPanel(index) {
     index = Math.max(0, Math.min(panels.length - 1, index));
     if (index === currentPanel) return;
 
-    const fromIndex = currentPanel;
-    isAnimating = true;
-
-    apply3DStates(fromIndex, index);
-
-    currentPanel = index;
-    updateIndicator();
-
-    animateTranslate(-currentPanel * window.innerWidth, 700, () => {
-      isAnimating = false;
-    });
+    // Instead of immediately moving, trigger the splash
+    triggerSplashTransition(index);
   }
 
   function triggerCooldown() {
@@ -480,7 +524,6 @@ function handleSummonSubmit(event) {
   track.style.transform = 'translate3d(0,0,0)';
   updateIndicator();
 })();
-
 
 /* ===================== 3D TILT (PARCHMENT + MEDALLION) ===================== */
 (function init3DTilt() {
